@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  api-lint:
+    runs-on: debian-11
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes @redocly/cli lint api-files/openapi.yaml
+          npx --yes @redocly/cli lint api-files/file-storing.yaml
+          npx --yes @redocly/cli lint api-files/file-analisys.yaml
+          npx --yes @redocly/cli lint api-files/embedding-service.yaml
+
+  tests:
+    runs-on: debian-11
+    needs: [api-lint]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.4"
+          cache: true
+
+      - name: gofmt (check)
+        shell: bash
+        run: |
+          set -euo pipefail
+          for m in api-gateway file-storing file-analisys embedding-service; do
+            echo "== $m =="
+            test -z "$(gofmt -l $m)"
+          done
+
+      - name: go vet
+        shell: bash
+        run: |
+          set -euo pipefail
+          for m in api-gateway file-storing file-analisys embedding-service; do
+            echo "== $m =="
+            (cd "$m" && go vet ./...)
+          done
+
+      - name: go test
+        shell: bash
+        run: |
+          set -euo pipefail
+          for m in api-gateway file-storing file-analisys embedding-service; do
+            echo "== $m =="
+            (cd "$m" && go test ./... -count=1 -timeout=10m)
+          done
+
+  python-unit:
+    name: Python tests
+    runs-on: debian-11
+    needs: [api-lint, tests]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run local unittest discovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m unittest discover -s tests -p "test_*.py" -v
+
+
+  deploy:
+    name: Deploy
+    needs: [ api-lint, tests, python-unit ]
+    if: ${{ github.event_name == 'push' }}
+    uses: ./.github/workflows/cd.yml
+    secrets: inherit
+    with:
+      checkout_ref: ${{ github.sha }}
+      deploy_branch: ${{ github.ref_name }}

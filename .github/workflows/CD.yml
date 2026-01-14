@@ -34,13 +34,14 @@ jobs:
         shell: bash
         env:
           HOST: ${{ secrets.DEPLOY_HOST }}
-          KEY:  ${{ secrets.DEPLOY_SSH_KEY }}
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh
-          echo $KEY > ~/.ssh/id_ed25519
+          printf '%s' "$KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
+      
 
       - name: Sync code on server
         shell: bash
@@ -75,20 +76,18 @@ jobs:
           S3_ENV: ${{ secrets.S3_ENV }}
           YANDEX_CLOUD_ENV: ${{ secrets.YANDEX_CLOUD_ENV }}
         run: |
-          run: |
-            set -euo pipefail
-          
-            SSH="ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=no"
-            TARGET="${USER}@${HOST}"
-            
-            S3_DIR="${REMOTE_DIR}/repo/file-storing/internal/env-files"
-            YC_DIR="${REMOTE_DIR}/repo/embedding-service/internal/env-files"
-            
-            $SSH "$TARGET" "mkdir -p '$S3_DIR' '$YC_DIR'"
-            
-            printf '%s' "$S3_ENV" | $SSH "$TARGET" "cat > '$S3_DIR/s3.env'"
-            printf '%s' "$YANDEX_CLOUD_ENV" | $SSH "$TARGET" "cat > '$YC_DIR/yandexCloud.env'"
-            
-            $SSH "$TARGET" "cd '${REMOTE_DIR}/repo' && docker compose docker-compose.yaml up -d --build"
+          set -euo pipefail
 
-          SCRIPT
+          SSH="ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes"
+          TARGET="${USER}@${HOST}"
+
+          S3_DIR="${REMOTE_DIR}/repo/file-storing/internal/env-files"
+          YC_DIR="${REMOTE_DIR}/repo/embedding-service/internal/env-files"
+
+          $SSH "$TARGET" "mkdir -p '$S3_DIR' '$YC_DIR'"
+
+          [ -n "${S3_ENV:-}" ] && printf '%s' "$S3_ENV" | $SSH "$TARGET" "cat > '$S3_DIR/s3.env'"
+          [ -n "${YANDEX_CLOUD_ENV:-}" ] && printf '%s' "$YANDEX_CLOUD_ENV" | $SSH "$TARGET" "cat > '$YC_DIR/yandexCloud.env'"
+
+          $SSH "$TARGET" "cd '${REMOTE_DIR}/repo' && sudo -n docker compose -f docker-compose.yaml up -d --build"
+      
