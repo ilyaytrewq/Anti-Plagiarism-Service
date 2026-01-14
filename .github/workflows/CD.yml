@@ -59,8 +59,8 @@ jobs:
           TARGET="${USER}@${HOST}"
       
           $SSH "$TARGET" "
-            sudo mkdir -p '$REMOTE_DIR' &&
-            sudo chown -R '$USER:$USER' /opt/anti-plagiarism &&
+            mkdir -p '$REMOTE_DIR' &&
+            chown -R '$USER:$USER' /opt/anti-plagiarism &&
             if [ ! -d '$REMOTE_DIR/repo/.git' ]; then git clone '$REPO_SSH' '$REMOTE_DIR/repo'; fi &&
             cd '$REMOTE_DIR/repo' &&
             git fetch origin &&
@@ -89,5 +89,5 @@ jobs:
           [ -n "${S3_ENV:-}" ] && printf '%s' "$S3_ENV" | $SSH "$TARGET" "cat > '$S3_DIR/s3.env'"
           [ -n "${YANDEX_CLOUD_ENV:-}" ] && printf '%s' "$YANDEX_CLOUD_ENV" | $SSH "$TARGET" "cat > '$YC_DIR/yandexCloud.env'"
 
-          $SSH "$TARGET" "cd '${REMOTE_DIR}/repo' && sudo -n docker compose -f docker-compose.yaml up -d --build"
+          $SSH "$TARGET" "cd '${REMOTE_DIR}/repo' && -n docker compose -f docker-compose.yaml up -d --build"
       
