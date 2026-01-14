@@ -81,7 +81,7 @@ jobs:
     name: Deploy
     needs: [ api-lint, tests, python-unit ]
     if: ${{ github.event_name == 'push' }}
-    uses: ./.github/workflows/cd.yml
+    uses: ./.github/workflows/CD.yml
     secrets: inherit
     with:
       checkout_ref: ${{ github.sha }}
