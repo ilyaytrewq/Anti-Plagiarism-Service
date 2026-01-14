@@ -18,7 +18,7 @@ Swagger UI: `http://158.160.150.71:8088`
 ```
 Client → API Gateway → File Storing (загрузка файла, получение fileId)
                     → File Analysis (скачивание файла, chunking, запуск проверки)
-                    → Embedding Service (векторизация chunks)
+                    → Embedding Service (векторизация чанков)
                     → Qdrant (поиск похожих векторов)
                     → Postgres (сохранение результатов)
 Client ← API Gateway ← File Analysis (получение отчета)
@@ -103,53 +103,15 @@ docker compose up --build -d
 ## Кодогенерация кода
 #### использовалась кодогенерация на основе open api файлов
 ```bash
-# Серверный код
-oapi-codegen -generate chi-server,types -package api \
-  -o ./api-gateway/internal/api/generated/generated.go \
-  ./api-files/openapi.yaml
-
-oapi-codegen -generate chi-server,types -package api \
-  -o ./file-analisys/internal/api/generated/generated.go \
-  ./api-files/file-analisys.yaml
-
-oapi-codegen -generate chi-server,types -package api \
-  -o ./file-storing/internal/api/generated/generated.go \
-  ./api-files/file-storing.yaml
-
-oapi-codegen -generate chi-server,types -package api \
-  -o ./embedding-service/internal/api/generated/generated.go \
-  ./api-files/embedding-service.yaml
-
-# Клиентский код API Gateway
-oapi-codegen -generate client,types -package filestoring \
-  -o ./api-gateway/internal/clients/filestoring/client.go \
-  ./api-files/file-storing.yaml
-
-oapi-codegen -generate client,types -package fileanalysis \
-  -o ./api-gateway/internal/clients/fileanalysis/client.go \
-  ./api-files/file-analisys.yaml
-
-oapi-codegen -generate client,types -package embedding \
-  -o ./file-analisys/internal/clients/embedding/client.go \
-  ./api-files/embedding-service.yaml
-
-oapi-codegen -generate client,types -package filestoring \
-  -o ./file-analisys/internal/clients/filestoring/client.go \
-  ./api-files/file-storing.yaml
-
-```
-
-```bash
-ilyatikhonov@MacBook-Pro-Ilya api-gateway % sqlc generate
+chmod +x scripts/code-generataion.sh
+./scripts/code-generation.sh 
 ```
 
 #### Для проверки open api файлов использовался Redocly (встроен в CI)
 ```bash
-npx @redocly/cli lint ./api-files/openapi.yaml
-npx @redocly/cli lint ./api-files/file-storing.yaml
-npx @redocly/cli lint ./api-files/file-analisys.yaml
-npx @redocly/cli lint ./api-files/embedding-service.yaml
-```
+chmod +x scripts/open-api-files-checker.sh 
+./scripts/open-api-files-checker.sh 
+ ```
 
 ## 🧩 CI/CD
 
