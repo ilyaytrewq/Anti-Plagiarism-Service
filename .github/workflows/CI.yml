@@ -8,7 +8,7 @@ on:
 
 jobs:
   api-lint:
-    runs-on: debian-11
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,7 +23,7 @@ jobs:
           npx --yes @redocly/cli lint api-files/embedding-service.yaml
 
   tests:
-    runs-on: debian-11
+    runs-on: ubuntu-22.04
     needs: [api-lint]
     steps:
       - uses: actions/checkout@v4
@@ -61,7 +61,7 @@ jobs:
 
   python-unit:
     name: Python tests
-    runs-on: debian-11
+    runs-on: ubuntu-22.04
     needs: [api-lint, tests]
     steps:
       - uses: actions/checkout@v4
