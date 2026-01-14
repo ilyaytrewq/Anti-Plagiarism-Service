@@ -87,8 +87,8 @@ jobs:
 
           $SSH "$TARGET" "mkdir -p '$S3_DIR' '$YC_DIR'"
 
-          [ -n "${S3_ENV:-}" ] && printf '%s' "$S3_ENV" | $SSH "$TARGET" "cat > '$S3_DIR/s3.env'"
-          [ -n "${YANDEX_CLOUD_ENV:-}" ] && printf '%s' "$YANDEX_CLOUD_ENV" | $SSH "$TARGET" "cat > '$YC_DIR/yandexCloud.env'"
+          printf '%s' "$S3_ENV" | $SSH "$TARGET" "cat > '$S3_DIR/s3.env'"
+          printf '%s' "$YANDEX_CLOUD_ENV" | $SSH "$TARGET" "cat > '$YC_DIR/yandexCloud.env'"
 
           $SSH "$TARGET" "cd '${REMOTE_DIR}/repo' && -n docker compose -f docker-compose.yaml up -d --build"
       
