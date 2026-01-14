@@ -53,6 +53,7 @@ jobs:
           set -euo pipefail
       
           REMOTE_DIR="/opt/anti-plagiarism/${{ inputs.deploy_branch == 'main' && 'prod' || 'dev' }}"
+          REPO_SSH="https://github.com/ilyaytrewq/Anti-Plagiarism-Service"
           echo "REMOTE_DIR=$REMOTE_DIR" >> "$GITHUB_ENV"
       
           SSH="ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=no"
