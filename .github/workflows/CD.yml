@@ -1,0 +1,94 @@
+name: CD (Deploy to Server)
+
+on:
+  workflow_call:
+    inputs:
+      checkout_ref:
+        required: true
+        type: string
+      deploy_branch:
+        required: true
+        type: string
+    secrets:
+      DEPLOY_HOST:
+        required: true
+      DEPLOY_USER:
+        required: true
+      DEPLOY_SSH_KEY:
+        required: true
+      S3_ENV:
+        required: false
+      YANDEX_CLOUD_ENV:
+        required: false
+
+jobs:
+  deploy:
+    runs-on: debian-11
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.checkout_ref }}
+
+      - name: Prepare SSH
+        shell: bash
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          KEY:  ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          echo $KEY > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
+
+      - name: Sync code on server
+        shell: bash
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          REPO_SSH: git@github.com:ilyaytrewq/Anti-Plagiarism-Service.git
+        run: |
+          set -euo pipefail
+      
+          REMOTE_DIR="/opt/anti-plagiarism/${{ inputs.deploy_branch == 'main' && 'prod' || 'dev' }}"
+          echo "REMOTE_DIR=$REMOTE_DIR" >> "$GITHUB_ENV"
+      
+          SSH="ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=no"
+          TARGET="${USER}@${HOST}"
+      
+          $SSH "$TARGET" "
+            sudo mkdir -p '$REMOTE_DIR' &&
+            sudo chown -R '$USER:$USER' /opt/anti-plagiarism &&
+            if [ ! -d '$REMOTE_DIR/repo/.git' ]; then git clone '$REPO_SSH' '$REMOTE_DIR/repo'; fi &&
+            cd '$REMOTE_DIR/repo' &&
+            git fetch origin &&
+            git checkout -B '${{ inputs.deploy_branch }}' 'origin/${{ inputs.deploy_branch }}'
+          "
+
+
+      - name: Deploy
+        shell: bash
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          S3_ENV: ${{ secrets.S3_ENV }}
+          YANDEX_CLOUD_ENV: ${{ secrets.YANDEX_CLOUD_ENV }}
+        run: |
+          run: |
+            set -euo pipefail
+          
+            SSH="ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=no"
+            TARGET="${USER}@${HOST}"
+            
+            S3_DIR="${REMOTE_DIR}/repo/file-storing/internal/env-files"
+            YC_DIR="${REMOTE_DIR}/repo/embedding-service/internal/env-files"
+            
+            $SSH "$TARGET" "mkdir -p '$S3_DIR' '$YC_DIR'"
+            
+            printf '%s' "$S3_ENV" | $SSH "$TARGET" "cat > '$S3_DIR/s3.env'"
+            printf '%s' "$YANDEX_CLOUD_ENV" | $SSH "$TARGET" "cat > '$YC_DIR/yandexCloud.env'"
+            
+            $SSH "$TARGET" "cd '${REMOTE_DIR}/repo' && docker compose docker-compose.yaml up -d --build"
+
+          SCRIPT
