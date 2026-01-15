@@ -79,7 +79,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          SSH="ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes"
+          SSH="ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=6"
           TARGET="${USER}@${HOST}"
 
           S3_DIR="${REMOTE_DIR}/repo/file-storing/internal/env-files"
