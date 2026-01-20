@@ -47,7 +47,7 @@ jobs:
         shell: bash
         env:
           HOST: ${{ secrets.DEPLOY_HOST }}
-          USER: ${{ secrets.DEPLOY_USER }}
+          USER: ${{ secrets.DEPLOY_USER }} 
           REPO_SSH: git@github.com:ilyaytrewq/Anti-Plagiarism-Service.git
         run: |
           set -euo pipefail
