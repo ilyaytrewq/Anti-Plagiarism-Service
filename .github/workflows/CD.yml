@@ -34,7 +34,7 @@ jobs:
         shell: bash
         env:
           HOST: ${{ secrets.DEPLOY_HOST }}
-          KEY_B64: ${{ secrets.DEPLOY_SSH_KEY_B64 }}
+          KEY_B64: ${{ secrets.DEPLOY_SSH_KEY}}
         run: |
           set -euo pipefail
           mkdir -p ~/.ssh
@@ -60,8 +60,8 @@ jobs:
           TARGET="${USER}@${HOST}"
       
           $SSH "$TARGET" "
-            mkdir -p '$REMOTE_DIR' &&
-            chown -R '$USER:$USER' /opt/anti-plagiarism &&
+            sudo mkdir -p '$REMOTE_DIR' &&
+            sudo chown -R '$USER:$USER' /opt/anti-plagiarism &&
             if [ ! -d '$REMOTE_DIR/repo/.git' ]; then git clone '$REPO_SSH' '$REMOTE_DIR/repo'; fi &&
             cd '$REMOTE_DIR/repo' &&
             git fetch origin &&
@@ -85,10 +85,10 @@ jobs:
           S3_DIR="${REMOTE_DIR}/repo/file-storing/internal/env-files"
           YC_DIR="${REMOTE_DIR}/repo/embedding-service/internal/env-files"
 
-          $SSH "$TARGET" "mkdir -p '$S3_DIR' '$YC_DIR'"
+          $SSH "$TARGET" "sudo mkdir -p '$S3_DIR' '$YC_DIR'"
 
-          printf '%s' "$S3_ENV" | $SSH "$TARGET" "cat > '$S3_DIR/s3.env'"
-          printf '%s' "$YANDEX_CLOUD_ENV" | $SSH "$TARGET" "cat > '$YC_DIR/yandexCloud.env'"
+          printf '%s' "$S3_ENV" | $SSH "$TARGET" "sudo tee '$S3_DIR/s3.env' > /dev/null"
+          printf '%s' "$YANDEX_CLOUD_ENV" | $SSH "$TARGET" "sudo tee '$YC_DIR/yandexCloud.env' > /dev/null"
 
-          $SSH "$TARGET" "cd '${REMOTE_DIR}/repo' && docker compose -f docker-compose.yaml up -d --build"
+          $SSH "$TARGET" "cd '${REMOTE_DIR}/repo' && sudo docker compose -f docker-compose.yaml up -d --build"
       
