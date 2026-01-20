@@ -159,6 +159,6 @@ chmod +x scripts/open-api-files-checker.sh
 - Деплой по ветке:
   - `main` → `/opt/anti-plagiarism/prod`
   - другие ветки → `/opt/anti-plagiarism/dev`
-- SSH ключ берется из `DEPLOY_SSH_KEY_B64` (base64).
+- SSH ключ берется из `DEPLOY_SSH_KEY` (приватный ключ как есть).
 - На сервере создаются env-файлы из секретов `S3_ENV` и `YANDEX_CLOUD_ENV`.
 - Запуск: `docker compose -f docker-compose.yaml up -d --build`.
