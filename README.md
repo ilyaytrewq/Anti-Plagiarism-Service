@@ -2,9 +2,8 @@
 Микросервисная система для проверки студенческих работ на плагиат с использованием векторных эмбеддингов.
 
 Базовые URL:
-- локально (docker compose): `http://localhost:8080/api/v1`
-- из `api-files/openapi.yaml`: `http://158.160.186.61:8080/api/v1`
-Swagger UI (docker compose): `http://localhost:8088`
+- : `http:/158.160.175.197:8080/api/v1`
+- Swagger UI: `http://158.160.175.197:8088`
 
 ## Архитектура
 
