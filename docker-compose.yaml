@@ -2,11 +2,13 @@ services:
   swagger:
     image: swaggerapi/swagger-ui
     ports:
-      - "8088:8080"
+      - "158.160.175.197:8088:8080"
     environment:
       - URL=/api-files/openapi.yaml
     volumes:
       - ./api-files/openapi.yaml:/usr/share/nginx/html/api-files/openapi.yaml:ro
+    networks: [public]
+
 
   api-gateway:
     build: ./api-gateway
@@ -25,6 +27,7 @@ services:
       - PG_GATEWAY_PORT=5432
     depends_on:
       - postgres-gateway
+    networks: [public, internal]
 
   postgres-gateway:
     image: postgres:16-alpine
@@ -39,8 +42,8 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
-    expose:
-      - "5432"
+    expose: ["5432"]
+    networks: [internal]
 
   postgres-analysis:
     image: postgres:16-alpine
@@ -55,11 +58,11 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
-    expose:
-      - "5432"
+    expose: ["5432"]
+    networks: [internal]
 
   qdrant:
-    image: qdrant/qdrant:latest
+    image: qdrant/qdrant:v1.16
     volumes:
       - qdrant_storage:/qdrant/storage
     environment:
@@ -67,6 +70,7 @@ services:
     expose:
       - "6333"
       - "6334"
+    networks: [internal]
 
   file-analisys:
     build: ./file-analisys
@@ -89,6 +93,7 @@ services:
       - qdrant
     expose:
       - "8081"
+    networks: [internal]
 
   embedding-service:
     build: ./embedding-service
@@ -96,6 +101,7 @@ services:
       - ./embedding-service/internal/env-files/yandexCloud.env
     expose:
       - "8083"
+    networks: [internal]
 
   file-storing:
     build: ./file-storing
@@ -105,6 +111,16 @@ services:
       - ./file-storing/internal/env-files/s3.env
     expose:
       - "8082"
+    networks: [internal]
+
+
+networks:
+  public:
+    driver: bridge
+  internal:
+    driver: bridge
+    internal: true
+
 
 volumes:
   gateway_db_data:
