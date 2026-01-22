@@ -101,7 +101,7 @@ services:
       - ./embedding-service/internal/env-files/yandexCloud.env
     expose:
       - "8083"
-    networks: [internal]
+    networks: [internal, public]
 
   file-storing:
     build: ./file-storing
@@ -111,12 +111,7 @@ services:
       - ./file-storing/internal/env-files/s3.env
     expose:
       - "8082"
-    networks: [internal]
-    dns:
-      - 77.88.8.8
-      - 77.88.8.1
-      - 1.1.1.1
-      - 127.0.0.11
+    networks: [internal, public]
 
 
 networks:
