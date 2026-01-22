@@ -112,6 +112,10 @@ services:
     expose:
       - "8082"
     networks: [internal]
+    dns:
+      - 77.88.8.8
+      - 77.88.8.1
+      - 1.1.1.1
 
 
 networks:
