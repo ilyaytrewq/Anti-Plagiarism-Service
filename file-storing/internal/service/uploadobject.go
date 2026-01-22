@@ -4,7 +4,6 @@ import (
 	"context"
 	"io"
 
-	"github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
@@ -18,8 +17,6 @@ func (s *S3Service) Upload(ctx context.Context, bucket, key, contentType, origin
 		Metadata: map[string]string{
 			"original-file-name": originalFileName,
 		},
-	}, s3.WithAPIOptions(
-		v4.SwapComputePayloadSHA256ForUnsignedPayloadMiddleware,
-	))
+	})
 	return err
 }
