@@ -58,7 +58,15 @@ type GatewayStore interface {
 func NewHandler() (*Handler, error) {
 	ctx := context.Background()
 	httpClient := &http.Client{
-		Timeout: 3 * time.Second,
+		Timeout: 5 * time.Second,
+	}
+
+	fileAnalysisHttpClient := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	fileStoringHttpClient := &http.Client{
+		Timeout: 40 * time.Second,
 	}
 
 	fileStoringConfig, err := config.LoadFileStoringConfig()
@@ -66,7 +74,7 @@ func NewHandler() (*Handler, error) {
 		return nil, fmt.Errorf("failed to load file storing config: %w", err)
 	}
 
-	fileStoringClient, err := filestoring.NewClientWithResponses(fileStoringConfig.Url, filestoring.WithHTTPClient(httpClient))
+	fileStoringClient, err := filestoring.NewClientWithResponses(fileStoringConfig.Url, filestoring.WithHTTPClient(fileAnalysisHttpClient))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create file storing client: %w", err)
 	}
@@ -76,7 +84,7 @@ func NewHandler() (*Handler, error) {
 		return nil, fmt.Errorf("failed to load file analysis config: %w", err)
 	}
 
-	fileAnalysisClient, err := fileanalysis.NewClientWithResponses(fileAnalysisConfig.Url, fileanalysis.WithHTTPClient(httpClient))
+	fileAnalysisClient, err := fileanalysis.NewClientWithResponses(fileAnalysisConfig.Url, fileanalysis.WithHTTPClient(fileStoringHttpClient))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create file analysis client: %w", err)
 	}
